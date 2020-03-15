@@ -8,6 +8,13 @@
 - [English](./readme.md)
 - 日本語 (現在)
 
+## インストール
+
+Composer を使用する:
+```
+composer require m3m0r7/php-deferrable
+```
+
 ## クイックスタート
 ```php
 use function PHPDeferrable\defer;

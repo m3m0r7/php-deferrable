@@ -8,6 +8,13 @@ This library is very simple because this is not depending other libraries.
 - English (Current)
 - [日本語](./readme-ja.md) 
 
+## Install
+
+Use composer:
+```
+composer require m3m0r7/php-deferrable
+```
+
 ## Quick Start
 ```php
 use function PHPDeferrable\defer;
