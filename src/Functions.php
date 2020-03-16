@@ -1,7 +1,9 @@
 <?php declare(strict_types=1);
 namespace PHPDeferrable;
 
+define('DEFER_ANONYMOUS_CLASS_PREFIX', '__defer__anonymous_');
 define('DEFER_GLOBAL_NAME', '__temp_defers__');
+define('DEFER_ANONYMOUS_SCOPE_NAME', 'anonymous');
 
 $GLOBALS[DEFER_GLOBAL_NAME] = [
     'current' => null,
@@ -9,7 +11,7 @@ $GLOBALS[DEFER_GLOBAL_NAME] = [
     'definitions' => null,
 ];
 
-$GLOBALS[DEFER_GLOBAL_NAME]['anonymous'] = createDeferContext();
+$GLOBALS[DEFER_GLOBAL_NAME][DEFER_ANONYMOUS_SCOPE_NAME] = createDeferContext();
 
 /**
  * Create a defer context.
@@ -24,6 +26,9 @@ function createDeferContext(?string $className = null, ?string $methodName = nul
      * @var string $currentStackName
      */
     $currentStackName = $GLOBALS[DEFER_GLOBAL_NAME]['current'];
+    if (!$currentStackName) {
+        return $GLOBALS[DEFER_GLOBAL_NAME][DEFER_ANONYMOUS_SCOPE_NAME] ?? new DeferContext();
+    }
     return $GLOBALS[DEFER_GLOBAL_NAME]['definitions'][$currentStackName] = new DeferContext();
 }
 
@@ -41,12 +46,13 @@ function consumeDefers(DeferContext $context, ?string $className = null, ?string
      */
     $currentStackName = $GLOBALS[DEFER_GLOBAL_NAME]['current'];
     $definition = $GLOBALS[DEFER_GLOBAL_NAME]['definitions'];
-    try {
-        while ($callback = ($definition[$currentStackName] ?? $GLOBALS[DEFER_GLOBAL_NAME]['anonymous'])->pop()) {
-            $callback();
-        }
-    } catch (\RuntimeException $e) {
 
+    /**
+     * @var DeferContext $context
+     */
+    $context = $definition[$currentStackName] ?? $GLOBALS[DEFER_GLOBAL_NAME]['anonymous'];
+    while ($callback = $context->pop()) {
+        $callback();
     }
     unset($context);
 }
@@ -143,7 +149,7 @@ function deferrable($targetClass, ...$arguments)
             . '}';
     }
 
-    $temporaryClassName = '__defer__anonymous_' . ($GLOBALS['__temp_defers__']['temporary_classes_count']++);
+    $temporaryClassName = DEFER_ANONYMOUS_CLASS_PREFIX . ($GLOBALS[DEFER_GLOBAL_NAME]['temporary_classes_count']++);
     eval('class ' . $temporaryClassName . ' extends ' . $targetClass . ' implements \\' . __NAMESPACE__ . '\\DeferrableInterface { ' . implode($body) . ' };');
     return new $temporaryClassName(...$arguments);
 }
@@ -161,7 +167,7 @@ function defer(callable $callback): void
     $currentStackName = $GLOBALS[DEFER_GLOBAL_NAME]['current'];
 
     if (!$currentStackName) {
-        $GLOBALS[DEFER_GLOBAL_NAME]['anonymous']->defer(
+        $GLOBALS[DEFER_GLOBAL_NAME][DEFER_ANONYMOUS_SCOPE_NAME]->defer(
             $callback
         );
         return;

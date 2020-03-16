@@ -41,10 +41,13 @@ class DeferContext
     /**
      * Pop a callback from defer stacks.
      *
-     * @return callable
+     * @return callable|false
      */
     public function pop()
     {
+        if ($this->splStack->count() <= 0) {
+            return false;
+        }
         return $this->splStack->pop();
     }
 
@@ -56,7 +59,7 @@ class DeferContext
         foreach ($this->beforeCallbacks as $callback) {
             $callback($this);
         }
-        while ($this->splStack->count() > 0 && $callback = $this->pop()) {
+        while ($callback = $this->pop()) {
             foreach ($this->everyBeforeCallbacks as $everyCallback) {
                 $everyCallback($this);
             }
