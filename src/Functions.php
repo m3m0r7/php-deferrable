@@ -57,14 +57,15 @@ function consumeDefers(DeferContext $context, ?string $className = null, ?string
 
 /**
  * @param callable $deferrableFunction
+ * @param mixed ...$arguments pass parameters into a function
  * @return mixed
  */
-function deferrableFunction(callable $deferrableFunction)
+function deferrableFunction(callable $deferrableFunction, ...$arguments)
 {
     try {
         $GLOBALS[DEFER_GLOBAL_NAME]['current'] = 'anonymous@function';
         $context = createDeferContext(null, null);
-        $result = $deferrableFunction();
+        $result = $deferrableFunction(...$arguments);
     } finally {
         consumeDefers($context, null, null);
         $GLOBALS[DEFER_GLOBAL_NAME]['current'] = null;
@@ -84,7 +85,7 @@ function deferrableFunction(callable $deferrableFunction)
 function deferrable($targetClass, ...$arguments)
 {
     if (is_callable($targetClass)) {
-        return deferrableFunction($targetClass);
+        return deferrableFunction($targetClass, ...$arguments);
     }
 
     $reflection = new \ReflectionClass($targetClass);
