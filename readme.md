@@ -149,7 +149,6 @@ deferrable(function () {
 ## Context Manipulator
 The context manipulator is very simple deferrable functions manipulator.
 You can take possible to decreasing memory usage with using it.
-`Defer::createContext` is using only to method of a class.
 It is not required wrapping with `deferrable` function for you wanting to deferring a class. 
 
 ```php
