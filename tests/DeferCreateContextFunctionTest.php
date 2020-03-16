@@ -100,4 +100,22 @@ class DeferCreateContextFunctionTest extends TestCase
         );
     }
 
+    public function testDeferPattern5()
+    {
+        $a = function () {
+            $context = Defer::createContext();
+
+            $handle = fopen('php://memory', 'r');
+            $context->defer(function () use ($handle) {
+                fclose($handle);
+            });
+
+            return 'Return value';
+        };
+        $this->assertSame(
+            "Return value",
+            $a()
+        );
+    }
+
 }

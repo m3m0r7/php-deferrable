@@ -56,18 +56,14 @@ class DeferContext
         foreach ($this->beforeCallbacks as $callback) {
             $callback($this);
         }
-        try {
-            while ($callback = $this->pop()) {
-                foreach ($this->everyBeforeCallbacks as $everyCallback) {
-                    $everyCallback($this);
-                }
-                $callback();
-                foreach ($this->everyAfterCallbacks as $everyCallback) {
-                    $everyCallback($this);
-                }
+        while ($this->splStack->count() > 0 && $callback = $this->pop()) {
+            foreach ($this->everyBeforeCallbacks as $everyCallback) {
+                $everyCallback($this);
             }
-        } catch (\RuntimeException $e) {
-
+            $callback();
+            foreach ($this->everyAfterCallbacks as $everyCallback) {
+                $everyCallback($this);
+            }
         }
         foreach ($this->afterCallbacks as $callback) {
             $callback($this);

@@ -135,8 +135,10 @@ function deferrable($targetClass, ...$arguments)
             . '$GLOBALS[\'' . DEFER_GLOBAL_NAME . '\'][\'current\'] = __CLASS__ . \'::\' . __METHOD__;'
             . '$deferContext = \\' . __NAMESPACE__ . '\\createDeferContext(__CLASS__, __METHOD__); ' 
             . '$result = parent::' . $methodName . '(...func_get_args()); '
+            . '} finally {'
             . '\\' . __NAMESPACE__ . '\\consumeDefers($deferContext, __CLASS__, __METHOD__);'
-            . '} finally { $GLOBALS[\'' . DEFER_GLOBAL_NAME . '\'][\'current\'] = null; }'
+            . '$GLOBALS[\'' . DEFER_GLOBAL_NAME . '\'][\'current\'] = null;'
+            . '}'
             . 'return $result; '
             . '}';
     }

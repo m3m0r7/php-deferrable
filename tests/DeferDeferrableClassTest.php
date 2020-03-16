@@ -34,6 +34,15 @@ class DeferDeferrableClassTestTestMyClass
         });
         return "Return value";
     }
+
+    public function doSomething4(): string
+    {
+        $handle = fopen('php://memory', 'r');
+        defer(function () use ($handle) {
+            fclose($handle);
+        });
+        return "Return value";
+    }
 }
 
 class DeferDeferrableClassTest extends TestCase
@@ -94,6 +103,20 @@ class DeferDeferrableClassTest extends TestCase
          */
         $myClass = deferrable(DeferDeferrableClassTestTestMyClass::class);
         $result = $myClass->doSomething3();
+
+        $this->assertSame(
+            "Return value",
+            $result
+        );
+    }
+
+    public function testDeferPattern5()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(DeferDeferrableClassTestTestMyClass::class);
+        $result = $myClass->doSomething4();
 
         $this->assertSame(
             "Return value",

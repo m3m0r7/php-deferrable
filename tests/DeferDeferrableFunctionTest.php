@@ -104,4 +104,20 @@ class DeferDeferrableFunctionTest extends TestCase
             $result
         );
     }
+
+    public function testDeferPattern6()
+    {
+        $result = deferrable(function () {
+            $handle = fopen('php://memory', 'r');
+            defer(function () use ($handle) {
+                fclose($handle);
+            });
+            return 'Return value';
+        });
+
+        $this->assertSame(
+            "Return value",
+            $result
+        );
+    }
 }

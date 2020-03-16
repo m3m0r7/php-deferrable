@@ -27,6 +27,16 @@ class DeferCreateContextClassTestTestMyClass
         });
         echo "Wanwan!\n";
     }
+
+    public function doSomething3()
+    {
+        $context = Defer::createContext();
+        $handle = fopen('php://memory', 'r');
+        $context->defer(function () use ($handle) {
+            fclose($handle);
+        });
+        return 'Return value';
+    }
 }
 
 class DeferCreateContextClassTest extends TestCase
@@ -67,6 +77,17 @@ class DeferCreateContextClassTest extends TestCase
 
         $this->assertSame(
             "One!\nThree!\nTwo!\n",
+            $result
+        );
+    }
+
+    public function testDeferPattern4()
+    {
+        $myClass = new DeferCreateContextClassTestTestMyClass();
+        $result = $myClass->doSomething3();
+
+        $this->assertSame(
+            "Return value",
             $result
         );
     }
