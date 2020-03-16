@@ -15,16 +15,6 @@ class DeferCallback
     protected $arguments;
 
     /**
-     * @param callable $callback
-     * @param mixed ...$arguments
-     * @return static
-     */
-    public static function factory(callable $callback, &...$arguments)
-    {
-        return new static($callback, ...$arguments);
-    }
-
-    /**
      * DeferCallback constructor.
      * @param callable $callback
      * @param mixed ...$arguments
@@ -33,6 +23,16 @@ class DeferCallback
     {
         $this->callback = $callback;
         $this->arguments = $arguments;
+    }
+
+    /**
+     * @param callable $callback
+     * @param mixed ...$arguments
+     * @return static
+     */
+    public static function factory(callable $callback, &...$arguments)
+    {
+        return new static($callback, ...$arguments);
     }
 
     public function __invoke()

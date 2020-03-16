@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPDeferrable\Test;
-use PHPUnit\Framework\TestCase;
 
+use PHPUnit\Framework\TestCase;
 use function PHPDeferrable\defer;
 use function PHPDeferrable\deferrable;
 

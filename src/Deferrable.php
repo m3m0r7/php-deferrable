@@ -15,65 +15,6 @@ class Deferrable
     protected static $temporaryClassCounter = 0;
 
     /**
-     * Remove current context.
-     */
-    public static function removeContext()
-    {
-        static::$currentContext = null;
-    }
-
-    /**
-     * @return DeferContext
-     */
-    public static function getCurrentContext()
-    {
-        static $anonymousContext;
-        if (!$anonymousContext) {
-            $anonymousContext = new DeferContext();
-        }
-        return static::$currentContext ?? $anonymousContext;
-    }
-
-    /**
-     * @param string|null $className
-     * @param string|null $methodName
-     * @return DeferContext
-     */
-    public static function createDeferContext(?string $className = null, ?string $methodName = null): DeferContext
-    {
-        return static::getCurrentContext() ?? new DeferContext();
-    }
-
-    /**
-     * Consume deferred stacks.
-     *
-     * @param DeferContext $context
-     * @param string|null $className
-     * @param string|null $methodName
-     */
-    public static function consumeDefers(DeferContext $context): void
-    {
-        $context->consume();
-    }
-
-    /**
-     * @param callable $deferrableFunction
-     * @param mixed ...$arguments pass parameters into a function
-     * @return mixed
-     */
-    protected static function makeFunctionContextManipulator(callable $deferrableFunction, ...$arguments)
-    {
-        $context = static::createDeferContext(null, null);
-        try {
-            $result = $deferrableFunction(...$arguments);
-        } finally {
-            static::consumeDefers($context, null, null);
-            static::removeContext();
-        }
-        return $result;
-    }
-
-    /**
      * Allows to defer the specified function or class
      *
      * @param callable|string $targetClass callable or class path
@@ -152,6 +93,64 @@ class Deferrable
         return new $temporaryClassName(...$arguments);
     }
 
+    /**
+     * @param callable $deferrableFunction
+     * @param mixed ...$arguments pass parameters into a function
+     * @return mixed
+     */
+    protected static function makeFunctionContextManipulator(callable $deferrableFunction, ...$arguments)
+    {
+        $context = static::createDeferContext(null, null);
+        try {
+            $result = $deferrableFunction(...$arguments);
+        } finally {
+            static::consumeDefers($context, null, null);
+            static::removeContext();
+        }
+        return $result;
+    }
+
+    /**
+     * @param string|null $className
+     * @param string|null $methodName
+     * @return DeferContext
+     */
+    public static function createDeferContext(?string $className = null, ?string $methodName = null): DeferContext
+    {
+        return static::getCurrentContext() ?? new DeferContext();
+    }
+
+    /**
+     * @return DeferContext
+     */
+    public static function getCurrentContext()
+    {
+        static $anonymousContext;
+        if (!$anonymousContext) {
+            $anonymousContext = new DeferContext();
+        }
+        return static::$currentContext ?? $anonymousContext;
+    }
+
+    /**
+     * Consume deferred stacks.
+     *
+     * @param DeferContext $context
+     * @param string|null $className
+     * @param string|null $methodName
+     */
+    public static function consumeDefers(DeferContext $context): void
+    {
+        $context->consume();
+    }
+
+    /**
+     * Remove current context.
+     */
+    public static function removeContext()
+    {
+        static::$currentContext = null;
+    }
 
     /**
      * Register a callback for deferring.
