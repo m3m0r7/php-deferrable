@@ -167,7 +167,7 @@ It will show as below:
 Hello World
 ```
 
-And it can be changed the parameter value in `defer` with reference.
+And it can be changed the parameter value in `defer` function with reference.
 
 ```php
 use function PHPDeferrable\defer;
