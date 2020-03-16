@@ -215,10 +215,5 @@ $myClass = new MyClass();
 $myClass->doSomething();
 ```
 
-## Notice
-This library register global variables with `__temp_defers__`.
-This variable cannot be changed at this time.
-If you want to use this library without being bound by global variables, you must use `Defer::createContext`.
-
 ## License
 MIT
