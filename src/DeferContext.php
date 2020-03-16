@@ -1,10 +1,13 @@
 <?php declare(strict_types=1);
+
 namespace PHPDeferrable;
+
+use SplStack;
 
 class DeferContext
 {
     /**
-     * @var \SplStack|null
+     * @var SplStack|null
      */
     protected $splStack;
 
@@ -31,24 +34,11 @@ class DeferContext
     /**
      * Create a defer instance.
      *
-     * @param \SplStack|null $splStack
+     * @param SplStack|null $splStack
      */
-    public function __construct(?\SplStack $splStack = null)
+    public function __construct(?SplStack $splStack = null)
     {
-        $this->splStack = $splStack ?? new \SplStack();
-    }
-
-    /**
-     * Pop a callback from defer stacks.
-     *
-     * @return callable|false
-     */
-    public function pop()
-    {
-        if ($this->splStack->count() <= 0) {
-            return false;
-        }
-        return $this->splStack->pop();
+        $this->splStack = $splStack ?? new SplStack();
     }
 
     /**
@@ -71,6 +61,19 @@ class DeferContext
         foreach ($this->afterCallbacks as $callback) {
             $callback($this);
         }
+    }
+
+    /**
+     * Pop a callback from defer stacks.
+     *
+     * @return callable|false
+     */
+    public function pop()
+    {
+        if ($this->splStack->count() <= 0) {
+            return false;
+        }
+        return $this->splStack->pop();
     }
 
     /**

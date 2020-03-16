@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace PHPDeferrable;
 
 define('DEFER_ANONYMOUS_CLASS_PREFIX', '__defer__anonymous_');
@@ -139,7 +140,7 @@ function deferrable($targetClass, ...$arguments)
 
         $body[] = $makeModifier($method) . ' function ' . $methodName . '()' . $signature . ' { try{ '
             . '$GLOBALS[\'' . DEFER_GLOBAL_NAME . '\'][\'current\'] = __CLASS__ . \'::\' . __METHOD__;'
-            . '$deferContext = \\' . __NAMESPACE__ . '\\createDeferContext(__CLASS__, __METHOD__); ' 
+            . '$deferContext = \\' . __NAMESPACE__ . '\\createDeferContext(__CLASS__, __METHOD__); '
             . '$result = parent::' . $methodName . '(...func_get_args()); '
             . '} finally {'
             . '\\' . __NAMESPACE__ . '\\consumeDefers($deferContext, __CLASS__, __METHOD__);'
@@ -150,7 +151,7 @@ function deferrable($targetClass, ...$arguments)
     }
 
     $temporaryClassName = DEFER_ANONYMOUS_CLASS_PREFIX . ($GLOBALS[DEFER_GLOBAL_NAME]['temporary_classes_count']++);
-    eval('class ' . $temporaryClassName . ' extends ' . $targetClass . ' implements \\' . __NAMESPACE__ . '\\DeferrableInterface { ' . implode($body) . ' };');
+    eval('class ' . $temporaryClassName . ' extends ' . $targetClass . ' implements \\' . __NAMESPACE__ . '\\DeferrableInterface { ' . implode($body) . ' }');
     return new $temporaryClassName(...$arguments);
 }
 

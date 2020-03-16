@@ -1,5 +1,8 @@
 <?php declare(strict_types=1);
+
 namespace PHPDeferrable;
+
+use SplStack;
 
 class Defer
 {
@@ -11,7 +14,7 @@ class Defer
     public static function createContext(): DeferContext
     {
         return new DeferContext(
-            new \SplStack()
+            new SplStack()
         );
     }
 }

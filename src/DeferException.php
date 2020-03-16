@@ -1,7 +1,10 @@
 <?php declare(strict_types=1);
+
 namespace PHPDeferrable;
 
-class DeferException extends \RuntimeException
+use RuntimeException;
+
+class DeferException extends RuntimeException
 {
 
 }
