@@ -138,7 +138,7 @@ use function PHPDeferrable\deferrable;
 
 deferrable(function () {
     $handle = fopen('php://memory', 'r')
-    defer(function () {
+    defer(function () use ($handle) {
         fclose($handle)
     });
     // ... do something
