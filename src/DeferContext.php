@@ -41,15 +41,26 @@ class DeferContext
         $this->splStack = $splStack ?? new SplStack();
     }
 
+    public function __destruct()
+    {
+        $this->consume();
+    }
+
     /**
      * Run post-processing for defer stacks.
      */
-    public function __destruct()
+    public function consume()
     {
         foreach ($this->beforeCallbacks as $callback) {
+            /**
+             * @var callable $callback
+             */
             $callback($this);
         }
         while ($callback = $this->pop()) {
+            /**
+             * @var DeferCallback $callback
+             */
             foreach ($this->everyBeforeCallbacks as $everyCallback) {
                 $everyCallback($this);
             }
@@ -59,6 +70,9 @@ class DeferContext
             }
         }
         foreach ($this->afterCallbacks as $callback) {
+            /**
+             * @var callable $callback
+             */
             $callback($this);
         }
     }
@@ -80,11 +94,17 @@ class DeferContext
      * Register a callback for deferring.
      *
      * @param callable $callback
+     * @param mixed ...$arguments
      * @return DeferContext
      */
-    public function defer(callable $callback): self
+    public function defer(callable $callback, &...$arguments): self
     {
-        $this->splStack->push($callback);
+        $this->splStack->push(
+            DeferCallback::factory(
+                $callback,
+                ...$arguments
+            )
+        );
         return $this;
     }
 

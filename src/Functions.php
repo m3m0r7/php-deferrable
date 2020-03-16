@@ -52,10 +52,7 @@ function consumeDefers(DeferContext $context, ?string $className = null, ?string
      * @var DeferContext $context
      */
     $context = $definition[$currentStackName] ?? $GLOBALS[DEFER_GLOBAL_NAME]['anonymous'];
-    while ($callback = $context->pop()) {
-        $callback();
-    }
-    unset($context);
+    $context->consume();
 }
 
 /**
@@ -159,8 +156,9 @@ function deferrable($targetClass, ...$arguments)
  * Register a callback for deferring.
  *
  * @param callable $callback
+ * @param mixed ...$arguments
  */
-function defer(callable $callback): void
+function defer(callable $callback, &...$arguments): void
 {
     /**
      * @var string $currentStackName
@@ -169,10 +167,14 @@ function defer(callable $callback): void
 
     if (!$currentStackName) {
         $GLOBALS[DEFER_GLOBAL_NAME][DEFER_ANONYMOUS_SCOPE_NAME]->defer(
-            $callback
+            $callback,
+            ...$arguments
         );
         return;
     }
     $GLOBALS[DEFER_GLOBAL_NAME]['definitions'][$currentStackName]
-        ->defer($callback);
+        ->defer(
+            $callback,
+            ...$arguments
+        );
 }

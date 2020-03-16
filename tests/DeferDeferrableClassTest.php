@@ -43,6 +43,53 @@ class DeferDeferrableClassTestTestMyClass
         });
         return "Return value";
     }
+
+    public function doSomething6(): string
+    {
+        $message = 'Test';
+        defer(function (&$message) {
+            $message = 'Test2';
+        }, $message);
+
+        return $message;
+    }
+
+    public function doSomething7()
+    {
+        $message = 'Test';
+        defer(function (&$message) {
+            echo $message;
+        }, $message);
+
+        defer(function (&$message) {
+            $message = 'Test2';
+        }, $message);
+
+    }
+
+    public function doSomething8()
+    {
+        $message = 'Test';
+        defer(function () use (&$message) {
+            echo $message;
+        });
+
+        defer(function () use (&$message) {
+            $message = 'Test2';
+        });
+    }
+
+    public function doSomething9()
+    {
+        $message = 'Test';
+        defer(function ($message) {
+            echo $message;
+        }, $message);
+
+        defer(function ($message) {
+            $message = 'Test2';
+        }, $message);
+    }
 }
 
 class DeferDeferrableClassTest extends TestCase
@@ -120,6 +167,71 @@ class DeferDeferrableClassTest extends TestCase
 
         $this->assertSame(
             "Return value",
+            $result
+        );
+    }
+
+    public function testDeferPattern6()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(DeferDeferrableClassTestTestMyClass::class);
+        $result = $myClass->doSomething6();
+
+        $this->assertSame(
+            "Test",
+            $result
+        );
+    }
+
+    public function testDeferPattern7()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(DeferDeferrableClassTestTestMyClass::class);
+
+        ob_start();
+        $myClass->doSomething7();
+        $result = ob_get_clean();
+
+        $this->assertSame(
+            "Test2",
+            $result
+        );
+    }
+
+    public function testDeferPattern8()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(DeferDeferrableClassTestTestMyClass::class);
+
+        ob_start();
+        $myClass->doSomething8();
+        $result = ob_get_clean();
+
+        $this->assertSame(
+            "Test2",
+            $result
+        );
+    }
+
+    public function testDeferPattern9()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(DeferDeferrableClassTestTestMyClass::class);
+
+        ob_start();
+        $myClass->doSomething9();
+        $result = ob_get_clean();
+
+        $this->assertSame(
+            "Test",
             $result
         );
     }
