@@ -11,6 +11,13 @@ $GLOBALS[DEFER_GLOBAL_NAME] = [
 
 $GLOBALS[DEFER_GLOBAL_NAME]['anonymous'] = createDeferContext();
 
+/**
+ * Create a defer context.
+ *
+ * @param string|null $className
+ * @param string|null $methodName
+ * @return DeferContext
+ */
 function createDeferContext(?string $className = null, ?string $methodName = null): DeferContext
 {
     /**
@@ -20,7 +27,14 @@ function createDeferContext(?string $className = null, ?string $methodName = nul
     return $GLOBALS[DEFER_GLOBAL_NAME]['definitions'][$currentStackName] = new DeferContext();
 }
 
-function consumeDefers(DeferContext $context, ?string $className = null, ?string $methodName = null)
+/**
+ * Consume deferred stacks.
+ *
+ * @param DeferContext $context
+ * @param string|null $className
+ * @param string|null $methodName
+ */
+function consumeDefers(DeferContext $context, ?string $className = null, ?string $methodName = null): void
 {
     /**
      * @var string $currentStackName
@@ -37,19 +51,32 @@ function consumeDefers(DeferContext $context, ?string $className = null, ?string
     unset($context);
 }
 
+/**
+ * @param callable $deferrableFunction
+ * @return mixed
+ */
 function deferrableFunction(callable $deferrableFunction)
 {
     try {
         $GLOBALS[DEFER_GLOBAL_NAME]['current'] = 'anonymous@function';
         $context = createDeferContext(null, null);
-        $deferrableFunction();
+        $result = $deferrableFunction();
     } finally {
         consumeDefers($context, null, null);
         $GLOBALS[DEFER_GLOBAL_NAME]['current'] = null;
     }
-    return null;
+    return $result;
 }
 
+/**
+ * Allows to defer the specified function or class
+ *
+ * @param callable|string $targetClass callable or class path
+ * @param mixed ...$arguments pass parameters into class constructor
+ *
+ * @return DeferrableInterface|mixed
+ * @throws \ReflectionException
+ */
 function deferrable($targetClass, ...$arguments)
 {
     if (is_callable($targetClass)) {
@@ -79,6 +106,13 @@ function deferrable($targetClass, ...$arguments)
             $modifier[] = 'public';
         }
 
+        if ($method->isFinal()) {
+            throw new DeferrableException(
+                'deferrable cannot wrap `' . $method->getName() . '` because it is including `final` modifier. ' .
+                'Please remove `final` modifier or use `Defer::createContext` instead of deferrable and defer functions.'
+            );
+        }
+
         return implode(' ', $modifier);
     };
 
@@ -87,7 +121,17 @@ function deferrable($targetClass, ...$arguments)
         if ($method->isAbstract()) {
             continue;
         }
-        $body[] = $makeModifier($method) . ' function ' . $methodName . '() { try{ '
+        $signature = '';
+        if ($method->getReturnType()) {
+            $returnType = $method->getReturnType();
+            $signature = $returnType->getName();
+            if ($returnType->allowsNull()) {
+                $signature = '?' . $signature;
+            }
+            $signature = ': ' . $signature;
+        }
+        
+        $body[] = $makeModifier($method) . ' function ' . $methodName . '()' . $signature . ' { try{ '
             . '$GLOBALS[\'' . DEFER_GLOBAL_NAME . '\'][\'current\'] = __CLASS__ . \'::\' . __METHOD__;'
             . '$deferContext = \\' . __NAMESPACE__ . '\\createDeferContext(__CLASS__, __METHOD__); ' 
             . '$result = parent::' . $methodName . '(...func_get_args()); '
@@ -102,7 +146,12 @@ function deferrable($targetClass, ...$arguments)
     return new $temporaryClassName(...$arguments);
 }
 
-function defer(callable $callback)
+/**
+ * Register a callback for deferring.
+ *
+ * @param callable $callback
+ */
+function defer(callable $callback): void
 {
     /**
      * @var string $currentStackName

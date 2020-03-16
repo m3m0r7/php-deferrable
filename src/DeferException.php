@@ -1,7 +1,7 @@
 <?php
 namespace PHPDeferrable;
 
-class DeferException extends \Exception
+class DeferException extends \RuntimeException
 {
 
 }

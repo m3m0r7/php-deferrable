@@ -92,6 +92,28 @@ It will show as below:
 1: deferred call
 ```
 
+Deferrable function can be return a value.
+
+```php
+use function PHPDeferrable\defer;
+use function PHPDeferrable\deferrable;
+
+$result = deferrable(function () {
+    defer(function () {
+        // do something.
+    });
+    return "Return value\n";
+});
+
+echo $result;
+```
+
+It will show as below:
+```
+Return value
+```
+
+
 ## Context Manipulator
 The context manipulator is very simple deferrable functions manipulator.
 You can take possible to decreasing memory usage with using it.

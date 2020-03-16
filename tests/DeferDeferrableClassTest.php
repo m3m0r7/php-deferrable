@@ -27,6 +27,13 @@ class DeferDeferrableClassTestTestMyClass
         });
         echo "Wanwan!\n";
     }
+
+    public function doSomething3(): string
+    {
+        defer(function () {
+        });
+        return "Return value";
+    }
 }
 
 class DeferDeferrableClassTest extends TestCase
@@ -76,6 +83,20 @@ class DeferDeferrableClassTest extends TestCase
 
         $this->assertSame(
             "One!\nThree!\nTwo!\n",
+            $result
+        );
+    }
+
+    public function testDeferPattern4()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(DeferDeferrableClassTestTestMyClass::class);
+        $result = $myClass->doSomething3();
+
+        $this->assertSame(
+            "Return value",
             $result
         );
     }

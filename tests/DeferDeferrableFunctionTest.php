@@ -89,4 +89,19 @@ class DeferDeferrableFunctionTest extends TestCase
             $result
         );
     }
+
+    public function testDeferPattern5()
+    {
+        $result = deferrable(function () {
+            defer(function () {
+                // do something
+            });
+            return 'Return value';
+        });
+
+        $this->assertSame(
+            "Return value",
+            $result
+        );
+    }
 }
