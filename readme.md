@@ -146,6 +146,53 @@ deferrable(function () {
 
 ```
 
+`defer` can be passed any parameters and it will copy based the context.
+
+```php
+use function PHPDeferrable\defer;
+use function PHPDeferrable\deferrable;
+
+deferrable(function () {
+    $message = 'Hello World';
+    defer(function ($message) {
+        echo $message;
+    }, $message);
+    // ... do something
+});
+
+```
+
+It will show as below:
+```
+Hello World
+```
+
+And it can be changed the parameter value in `defer` with reference.
+
+```php
+use function PHPDeferrable\defer;
+use function PHPDeferrable\deferrable;
+
+deferrable(function () {
+    $message = 'Hello World';
+    defer(function (&$message) {
+        echo $message;
+    }, $message);
+
+    defer(function (&$message) {
+        $message = 'The cat has big power.';
+    }, $message);
+    // ... do something
+});
+
+```
+
+It will show as below:
+```
+The cat has big power.
+```
+
+
 ## Context Manipulator
 The context manipulator is very simple deferrable functions manipulator.
 You can take possible to decreasing memory usage with using it.

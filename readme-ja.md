@@ -147,6 +147,54 @@ deferrable(function () {
 
 ```
 
+`defer` は可変長引数を用いてパラメータを渡すことも可能です。パラメータはコンテキストに準じてコピーされます。
+
+
+```php
+use function PHPDeferrable\defer;
+use function PHPDeferrable\deferrable;
+
+deferrable(function () {
+    $message = 'Hello World';
+    defer(function ($message) {
+        echo $message;
+    }, $message);
+    // ... do something
+});
+
+```
+
+上記は下記のようになります。
+```
+Hello World
+```
+
+
+また、リファレンスとすることにより、 `defer` 内でパラメータの値を変更させることも可能です。
+
+```php
+use function PHPDeferrable\defer;
+use function PHPDeferrable\deferrable;
+
+deferrable(function () {
+    $message = 'Hello World';
+    defer(function (&$message) {
+        echo $message;
+    }, $message);
+
+    defer(function (&$message) {
+        $message = 'The cat has big power.';
+    }, $message);
+    // ... do something
+});
+
+```
+
+上記は下記のようになります。
+```
+The cat has big power.
+```
+
 
 ## コンテキストマニピュレータ
 コンテキストマニピュレータは非常にシンプルな方法で遅延処理を実現しています。
