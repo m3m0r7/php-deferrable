@@ -15,6 +15,24 @@ Composer を使用する:
 composer require m3m0r7/php-deferrable
 ```
 
+## 今までの課題
+Go には defer があり、return が返る前に defer の中身を実行することが出来ます。
+しかし PHP は defer がないものの、 `try-finally` やデストラクタの破棄タイミングを用いて defer を実現することが可能です。
+
+```php
+try {
+    // ... do something
+} finally {
+    // 後処理
+}
+```
+
+これにはいくつか問題があり、後処理をするコードが煩雑になる可能性と、 `try` 構文が長くなりすぎてしまうと、何を処理するのかわからなくなってしまいます。
+そして、不要なインデントに苛まれることでしょう。
+
+`php-deferrable` はその課題を解決するため、非常にシンプルな関数とクラスを提供することにより、それらすべての問題を解決します。 
+
+
 ## クイックスタート
 ```php
 use function PHPDeferrable\defer;
@@ -90,6 +108,43 @@ deferrable(function () {
 0: deferred call
 1: first call
 1: deferred call
+```
+
+`deferrable` 関数は関数の実行結句を返り値として返すことも可能です。
+
+```php
+use function PHPDeferrable\defer;
+use function PHPDeferrable\deferrable;
+
+$result = deferrable(function () {
+    defer(function () {
+        // do something.
+    });
+    return "Return value\n";
+});
+
+echo $result;
+```
+
+上記は以下のようになります。
+```
+Return value
+```
+
+`deferrable` は resource の後処理などにも有用です。
+
+```php
+use function PHPDeferrable\defer;
+use function PHPDeferrable\deferrable;
+
+deferrable(function () {
+    $handle = fopen('php://memory', 'r')
+    defer(function () {
+        fclose($handle)
+    });
+    // ... do something
+});
+
 ```
 
 

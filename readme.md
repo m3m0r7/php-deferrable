@@ -15,6 +15,23 @@ Use composer:
 composer require m3m0r7/php-deferrable
 ```
 
+## Issues to date
+Go has a defer, and you can execute the contents of the defer before returning.
+However, although PHP does not have a defer, it is possible to achieve defer using `try-finally` or destructor destruction timing.
+
+```php
+try {
+    // ... do something
+} finally {
+    // post-processing
+}
+```
+
+This has some problems: the post-processing code can be cumbersome, and if the `try` syntax gets too long, you won't know what to do.
+And you will suffer from unnecessary indentation.
+
+`php-deferrable` solves all of these problems by providing very simple functions and classes to solve the problem.
+
 ## Quick Start
 ```php
 use function PHPDeferrable\defer;
@@ -113,6 +130,21 @@ It will show as below:
 Return value
 ```
 
+Deferrable can manipulate resource context.
+
+```php
+use function PHPDeferrable\defer;
+use function PHPDeferrable\deferrable;
+
+deferrable(function () {
+    $handle = fopen('php://memory', 'r')
+    defer(function () {
+        fclose($handle)
+    });
+    // ... do something
+});
+
+```
 
 ## Context Manipulator
 The context manipulator is very simple deferrable functions manipulator.
