@@ -130,7 +130,7 @@ function deferrable($targetClass, ...$arguments)
             }
             $signature = ': ' . $signature;
         }
-        
+
         $body[] = $makeModifier($method) . ' function ' . $methodName . '()' . $signature . ' { try{ '
             . '$GLOBALS[\'' . DEFER_GLOBAL_NAME . '\'][\'current\'] = __CLASS__ . \'::\' . __METHOD__;'
             . '$deferContext = \\' . __NAMESPACE__ . '\\createDeferContext(__CLASS__, __METHOD__); ' 

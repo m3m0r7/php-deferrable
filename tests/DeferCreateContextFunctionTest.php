@@ -76,4 +76,28 @@ class DeferCreateContextFunctionTest extends TestCase
         );
     }
 
+    public function testDeferPattern4()
+    {
+        ob_start();
+        $b = function () {
+            $context = Defer::createContext();
+            $context->defer(function () {
+                echo "1: deferred call\n";
+            });
+            $context->defer(function () {
+                echo "1: deferred call2\n";
+            });
+            echo "1: first call\n";
+        };
+        $b();
+
+        $result = ob_get_clean();
+
+
+        $this->assertSame(
+            "1: first call\n1: deferred call2\n1: deferred call\n",
+            $result
+        );
+    }
+
 }
