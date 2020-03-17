@@ -4,7 +4,7 @@ namespace PHPDeferrable;
 
 use RuntimeException;
 
-class DeferrableMergedException extends RuntimeException
+class DeferBailException extends RuntimeException
 {
 
 }

@@ -2,10 +2,10 @@
 
 namespace PHPDeferrable;
 
-class DeferrableContinuableScope extends AbstractDeferrableScope
+class DeferBailableScope extends AbstractDeferrableScope
 {
     public function getScopeType(): int
     {
-        return DeferrableScopeType::CONTINUABLE;
+        return DeferrableScopeType::BAILABLE;
     }
 }

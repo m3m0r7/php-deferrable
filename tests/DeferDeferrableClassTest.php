@@ -2,11 +2,23 @@
 
 namespace PHPDeferrable\Test;
 
-use PHPDeferrable\DeferrableContinuableScope;
-use PHPDeferrable\DeferrableMergedException;
+use PHPDeferrable\DeferBailableExceptionInterface;
+use PHPDeferrable\DeferBailableScope;
+use PHPDeferrable\DeferContinuableScope;
+use PHPDeferrable\MergedDeferException;
 use PHPUnit\Framework\TestCase;
 use function PHPDeferrable\defer;
 use function PHPDeferrable\deferrable;
+
+class TestingException extends \Exception
+{
+
+}
+
+class BailableTestingException extends \Exception implements DeferBailableExceptionInterface
+{
+
+}
 
 class DeferDeferrableClassTestTestMyClass
 {
@@ -96,15 +108,38 @@ class DeferDeferrableClassTestTestMyClass
     public function doSomething10()
     {
         defer(function () {
-           throw new \Exception('exception test');
+           throw new \RuntimeException('exception test 3');
         });
 
         defer(function () {
-            throw new \Exception('exception test');
+            throw new \Exception('exception test 2');
         });
 
         defer(function () {
-            throw new \Exception('exception test');
+            throw new TestingException('exception test 1');
+        });
+
+    }
+
+    public function doSomething11(string $a, string $b)
+    {
+        defer(function () use ($a, $b) {
+            echo $a . $b;
+        });
+    }
+
+    public function doSomething12()
+    {
+        defer(function () {
+            throw new TestingException('exception test 3');
+        });
+
+        defer(function () {
+            throw new BailableTestingException('exception test 2');
+        });
+
+        defer(function () {
+            throw new \Exception('exception test 1');
         });
     }
 }
@@ -253,20 +288,67 @@ class DeferDeferrableClassTest extends TestCase
         );
     }
 
-
     public function testDeferPattern10()
     {
         /**
          * @var DeferDeferrableClassTestTestMyClass $myClass
          */
         $myClass = deferrable(
-            DeferrableContinuableScope::factory(
+            DeferBailableScope::factory(
                 DeferDeferrableClassTestTestMyClass::class
             )
         );
 
-        $this->expectException(DeferrableMergedException::class);
+        $this->expectException(TestingException::class);
 
         $myClass->doSomething10();
     }
+
+    public function testDeferPattern11()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(
+            DeferDeferrableClassTestTestMyClass::class
+        );
+
+        $this->expectException(MergedDeferException::class);
+
+        $myClass->doSomething10();
+    }
+
+    public function testDeferPattern12()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(
+            DeferDeferrableClassTestTestMyClass::class
+        );
+
+        ob_start();
+        $myClass->doSomething11('Hello', 'World');
+        $result = ob_get_clean();
+
+        $this->assertSame(
+            "HelloWorld",
+            $result
+        );
+    }
+
+    public function testDeferPattern13()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(
+            DeferDeferrableClassTestTestMyClass::class
+        );
+
+        $this->expectException(BailableTestingException::class);
+
+        $myClass->doSomething12();
+    }
+
 }

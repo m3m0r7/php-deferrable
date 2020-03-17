@@ -15,6 +15,17 @@ class Deferrable
     protected static $temporaryClassCounter = 0;
 
     /**
+     * @var int
+     */
+    protected static $scopeType = DeferrableScopeType::CONTINUABLE;
+
+    /**
+     * @var int
+     */
+    protected static $defaultScopeType = DeferrableScopeType::CONTINUABLE;
+
+
+    /**
      * Allows to defer the specified function or class
      *
      * @param callable|string|DeferrableScopeInterface $targetClass callable or class path
@@ -31,7 +42,7 @@ class Deferrable
 
         $scope = null;
         if (is_string($targetClass)) {
-            $scope = DeferrableContinuableScope::factory(
+            $scope = DeferContinuableScope::factory(
                 $targetClass
             );
         } else if ($targetClass instanceof DeferrableScopeInterface) {
@@ -47,55 +58,17 @@ class Deferrable
         );
         $body = [];
 
-        $makeModifier = function (\ReflectionMethod $method): string {
-            $modifier = [];
-            if ($method->isProtected()) {
-                $modifier[] = 'protected';
-            }
-
-            if ($method->isPrivate()) {
-                $modifier[] = 'private';
-            }
-
-            if ($method->isStatic()) {
-                $modifier[] = 'static';
-            }
-
-            if ($method->isPublic()) {
-                $modifier[] = 'public';
-            }
-
-            if ($method->isFinal()) {
-                throw new DeferrableException(
-                    'deferrable cannot wrap `' . $method->getName() . '` because it is including `final` modifier. ' .
-                    'Please remove `final` modifier or use `Defer::createContext` instead of deferrable and defer functions.'
-                );
-            }
-
-            return implode(' ', $modifier);
-        };
-
         foreach ($reflection->getMethods() as $method) {
             $methodName = $method->getName();
             if ($method->isAbstract()) {
                 continue;
             }
-            $signature = '';
-            if ($method->getReturnType()) {
-                $returnType = $method->getReturnType();
-                $signature = $returnType->getName();
-                if ($returnType->allowsNull()) {
-                    $signature = '?' . $signature;
-                }
-                $signature = ': ' . $signature;
-            }
-
-            $body[] = $makeModifier($method) . ' function ' . $methodName . '()' . $signature . ' { try{ '
-                . '$deferContext = \\' . __NAMESPACE__ . '\\Deferrable::createDeferContext(__CLASS__, __METHOD__); '
+            $body[] = static::makeMethodSignature($method) . ' { '
+                . '$deferContext = \\' . __NAMESPACE__ . '\\Deferrable::createDeferContext(' . $scope->getScopeType() . '); '
+                . 'try{'
                 . '$result = parent::' . $methodName . '(...func_get_args()); '
                 . '} finally {'
-                . '\\' . __NAMESPACE__ . '\\Deferrable::consumeDefers($deferContext, ' . $scope->getScopeType() . ');'
-                . '\\' . __NAMESPACE__ . '\\Deferrable::removeContext();'
+                . '\\' . __NAMESPACE__ . '\\Deferrable::consume($deferContext);'
                 . '}'
                 . 'return $result; '
                 . '}';
@@ -114,58 +87,112 @@ class Deferrable
     }
 
     /**
+     * @param \ReflectionMethod $method
+     * @return string
+     */
+    protected static function makeMethodSignature(\ReflectionMethod $method): string
+    {
+        $modifier = [];
+        if ($method->isProtected()) {
+            $modifier[] = 'protected';
+        }
+
+        if ($method->isPrivate()) {
+            $modifier[] = 'private';
+        }
+
+        if ($method->isStatic()) {
+            $modifier[] = 'static';
+        }
+
+        if ($method->isPublic()) {
+            $modifier[] = 'public';
+        }
+
+        if ($method->isFinal()) {
+            throw new DeferrableException(
+                'deferrable cannot wrap `' . $method->getName() . '` because it is including `final` modifier. ' .
+                'Please remove `final` modifier or use `Defer::createContext` instead of deferrable and defer functions.'
+            );
+        }
+
+        $returnType = '';
+        if ($method->getReturnType()) {
+            $returnTypeObject = $method->getReturnType();
+            $returnType = $returnTypeObject->getName();
+            if ($returnTypeObject->allowsNull()) {
+                $returnType = '?' . $returnType;
+            }
+            $returnType = ': ' . $returnType;
+        }
+
+        $parameters = [];
+
+        foreach ($method->getParameters() as $parameter) {
+            $parameterType = $parameter->getType();
+            $parameters[] = ($parameterType->allowsNull() ? '?' : '')
+                . $parameterType->getName()
+                . ' $'
+                . $parameter->getName();
+        }
+
+        return implode(' ', $modifier)
+            . ' function '
+            . $method->getName()
+            . '('
+            . implode(',', $parameters)
+            . ')'
+            . $returnType;
+    }
+
+    /**
      * @param callable $deferrableFunction
      * @param mixed ...$arguments pass parameters into a function
      * @return mixed
      */
     protected static function makeFunctionContextManipulator(callable $deferrableFunction, ...$arguments)
     {
-        $context = static::createDeferContext(null, null);
+        $context = static::createDeferContext(static::$scopeType);
         try {
             $result = $deferrableFunction(...$arguments);
         } finally {
-            static::consumeDefers(
-                $context,
-                DeferrableScopeType::BAILABLE
-            );
-            static::removeContext();
+            static::consume($context);
         }
         return $result;
     }
 
     /**
-     * @param string|null $className
-     * @param string|null $methodName
+     * @param int $scopeType
      * @return DeferContext
      */
-    public static function createDeferContext(?string $className = null, ?string $methodName = null): DeferContext
+    public static function createDeferContext(int $scopeType): DeferContext
     {
-        return static::getCurrentContext() ?? new DeferContext();
+        static::$scopeType = $scopeType;
+        return static::$currentContext = new DeferContext(static::$scopeType);
     }
 
     /**
-     * @return DeferContext
+     * @return DeferContext|null
      */
-    public static function getCurrentContext()
+    public static function getCurrentContext(): ?DeferContext
     {
-        static $anonymousContext;
-        if (!$anonymousContext) {
-            $anonymousContext = new DeferContext();
-        }
-        return static::$currentContext ?? $anonymousContext;
+        return static::$currentContext ?? new DeferContext(static::$scopeType);
     }
 
     /**
      * Consume deferred stacks.
      *
      * @param DeferContext $context
-     * @param int $scopeType
      */
-    public static function consumeDefers(DeferContext $context, int $scopeType): void
+    public static function consume(DeferContext $context): void
     {
-        $context->consume(
-            $scopeType
-        );
+        static::$scopeType = static::$defaultScopeType;
+
+        try {
+            $context->consume();
+        } finally {
+            static::removeContext();
+        }
     }
 
     /**
@@ -187,10 +214,10 @@ class Deferrable
         /**
          * @var string $currentStackName
          */
-        static::getCurrentContext()->defer(
-            $callback,
-            ...$arguments
-        );
+        static::getCurrentContext()
+            ->defer(
+                $callback,
+                ...$arguments
+            );
     }
-
 }

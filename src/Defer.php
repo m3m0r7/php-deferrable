@@ -9,11 +9,13 @@ class Defer
     /**
      * Create a defer context.
      *
+     * @param int $scopeType
      * @return DeferContext
      */
-    public static function createContext(): DeferContext
+    public static function createContext(int $scopeType = DeferrableScopeType::CONTINUABLE): DeferContext
     {
         return new DeferContext(
+            $scopeType,
             new SplStack()
         );
     }
