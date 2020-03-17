@@ -2,7 +2,7 @@
 
 namespace PHPDeferrable;
 
-class DeferrableContinuableScope extends AbstractDeferrableScope implements DeferrableScopeInterface
+class DeferrableContinuableScope extends AbstractDeferrableScope
 {
     public function getScopeType(): int
     {

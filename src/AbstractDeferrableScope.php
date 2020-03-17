@@ -2,10 +2,22 @@
 
 namespace PHPDeferrable;
 
-abstract class AbstractDeferrableScope
+abstract class AbstractDeferrableScope implements DeferrableScopeInterface
 {
     protected $targetClass;
 
+    /**
+     * @param string $targetClass
+     * @return static
+     */
+    public static function factory(string $targetClass)
+    {
+        return new static($targetClass);
+    }
+
+    /**
+     * @param string $targetClass
+     */
     public function __construct(string $targetClass)
     {
         $this->targetClass = $targetClass;
@@ -16,10 +28,5 @@ abstract class AbstractDeferrableScope
         return $this->targetClass;
     }
 
-    public function getScopeType(): int
-    {
-        throw new DeferrableException(
-            'Scope type is not defined'
-        );
-    }
+    abstract public function getScopeType(): int;
 }

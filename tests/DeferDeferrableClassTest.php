@@ -2,6 +2,8 @@
 
 namespace PHPDeferrable\Test;
 
+use PHPDeferrable\DeferrableContinuableScope;
+use PHPDeferrable\DeferrableMergedException;
 use PHPUnit\Framework\TestCase;
 use function PHPDeferrable\defer;
 use function PHPDeferrable\deferrable;
@@ -89,6 +91,21 @@ class DeferDeferrableClassTestTestMyClass
         defer(function ($message) {
             $message = 'Test2';
         }, $message);
+    }
+
+    public function doSomething10()
+    {
+        defer(function () {
+           throw new \Exception('exception test');
+        });
+
+        defer(function () {
+            throw new \Exception('exception test');
+        });
+
+        defer(function () {
+            throw new \Exception('exception test');
+        });
     }
 }
 
@@ -234,5 +251,22 @@ class DeferDeferrableClassTest extends TestCase
             "Test",
             $result
         );
+    }
+
+
+    public function testDeferPattern10()
+    {
+        /**
+         * @var DeferDeferrableClassTestTestMyClass $myClass
+         */
+        $myClass = deferrable(
+            DeferrableContinuableScope::factory(
+                DeferDeferrableClassTestTestMyClass::class
+            )
+        );
+
+        $this->expectException(DeferrableMergedException::class);
+
+        $myClass->doSomething10();
     }
 }

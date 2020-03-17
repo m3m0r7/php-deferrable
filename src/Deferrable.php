@@ -31,7 +31,7 @@ class Deferrable
 
         $scope = null;
         if (is_string($targetClass)) {
-            $scope = new DeferrableContinuableScope(
+            $scope = DeferrableContinuableScope::factory(
                 $targetClass
             );
         } else if ($targetClass instanceof DeferrableScopeInterface) {
@@ -42,10 +42,10 @@ class Deferrable
             );
         }
 
-        $reflection = new \ReflectionClass($targetClass);
-        $body = [
-            'public function isDeferrable(): bool { return true; }',
-        ];
+        $reflection = new \ReflectionClass(
+            $scope->getClassName()
+        );
+        $body = [];
 
         $makeModifier = function (\ReflectionMethod $method): string {
             $modifier = [];
@@ -102,7 +102,14 @@ class Deferrable
         }
 
         $temporaryClassName = Runtime::DEFER_ANONYMOUS_CLASS_PREFIX . (static::$temporaryClassCounter++);
-        eval('class ' . $temporaryClassName . ' extends ' . $scope->getClassName() . ' implements \\' . __NAMESPACE__ . '\\DeferrableInterface { ' . implode($body) . ' }');
+
+        eval(
+            'class ' . $temporaryClassName . ' extends ' . $scope->getClassName() . ' implements \\' . __NAMESPACE__ . '\\DeferrableInterface'
+            . '{'
+            . implode($body)
+            . '}'
+        );
+
         return new $temporaryClassName(...$arguments);
     }
 
