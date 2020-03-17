@@ -32,6 +32,11 @@ class DeferContext
     protected $everyAfterCallbacks = [];
 
     /**
+     * @var \Exception[] array
+     */
+    protected $exceptionStacks = [];
+
+    /**
      * Create a defer instance.
      *
      * @param SplStack|null $splStack
@@ -43,13 +48,17 @@ class DeferContext
 
     public function __destruct()
     {
-        $this->consume();
+        $this->consume(
+            DeferrableScopeType::BAILABLE
+        );
     }
 
     /**
      * Run post-processing for defer stacks.
+     *
+     * @param int $scopeType
      */
-    public function consume()
+    public function consume(int $scopeType)
     {
         foreach ($this->beforeCallbacks as $callback) {
             /**
@@ -64,7 +73,18 @@ class DeferContext
             foreach ($this->everyBeforeCallbacks as $everyCallback) {
                 $everyCallback($this);
             }
-            $callback();
+            switch ($scopeType) {
+                case DeferrableScopeType::CONTINUABLE:
+                    try {
+                        $callback();
+                    } catch (\Exception $e) {
+                        $this->exceptionStacks[] = $e;
+                    }
+                    break;
+                case DeferrableScopeType::BAILABLE:
+                    $callback();
+                    break;
+            }
             foreach ($this->everyAfterCallbacks as $everyCallback) {
                 $everyCallback($this);
             }
@@ -74,6 +94,16 @@ class DeferContext
              * @var callable $callback
              */
             $callback($this);
+        }
+        if (count($this->exceptionStacks) > 0) {
+            $messages = '';
+            foreach ($this->exceptionStacks as $number => $exceptionStack) {
+                $messages .= (++$number) . ': ' . $exceptionStack->getTraceAsString() . ' (line: ' . $exceptionStack->getLine() . ', file:' . $exceptionStack->getFile() . ')';
+            }
+            $this->exceptionStacks = [];
+            throw new DeferrableMergedException(
+                $messages
+            );
         }
     }
 

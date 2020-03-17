@@ -17,7 +17,7 @@ class Deferrable
     /**
      * Allows to defer the specified function or class
      *
-     * @param callable|string $targetClass callable or class path
+     * @param callable|string|DeferrableScopeInterface $targetClass callable or class path
      * @param mixed ...$arguments pass parameters into class constructor
      *
      * @return DeferrableInterface|mixed
@@ -27,6 +27,19 @@ class Deferrable
     {
         if (is_callable($targetClass)) {
             return static::makeFunctionContextManipulator($targetClass, ...$arguments);
+        }
+
+        $scope = null;
+        if (is_string($targetClass)) {
+            $scope = new DeferrableContinuableScope(
+                $targetClass
+            );
+        } else if ($targetClass instanceof DeferrableScopeInterface) {
+            $scope = $targetClass;
+        } else {
+            throw new DeferrableException(
+                'Passed parameter is invalid'
+            );
         }
 
         $reflection = new \ReflectionClass($targetClass);
@@ -81,7 +94,7 @@ class Deferrable
                 . '$deferContext = \\' . __NAMESPACE__ . '\\Deferrable::createDeferContext(__CLASS__, __METHOD__); '
                 . '$result = parent::' . $methodName . '(...func_get_args()); '
                 . '} finally {'
-                . '\\' . __NAMESPACE__ . '\\Deferrable::consumeDefers($deferContext);'
+                . '\\' . __NAMESPACE__ . '\\Deferrable::consumeDefers($deferContext, ' . $scope->getScopeType() . ');'
                 . '\\' . __NAMESPACE__ . '\\Deferrable::removeContext();'
                 . '}'
                 . 'return $result; '
@@ -89,7 +102,7 @@ class Deferrable
         }
 
         $temporaryClassName = Runtime::DEFER_ANONYMOUS_CLASS_PREFIX . (static::$temporaryClassCounter++);
-        eval('class ' . $temporaryClassName . ' extends ' . $targetClass . ' implements \\' . __NAMESPACE__ . '\\DeferrableInterface { ' . implode($body) . ' }');
+        eval('class ' . $temporaryClassName . ' extends ' . $scope->getClassName() . ' implements \\' . __NAMESPACE__ . '\\DeferrableInterface { ' . implode($body) . ' }');
         return new $temporaryClassName(...$arguments);
     }
 
@@ -104,7 +117,10 @@ class Deferrable
         try {
             $result = $deferrableFunction(...$arguments);
         } finally {
-            static::consumeDefers($context, null, null);
+            static::consumeDefers(
+                $context,
+                DeferrableScopeType::BAILABLE
+            );
             static::removeContext();
         }
         return $result;
@@ -136,12 +152,13 @@ class Deferrable
      * Consume deferred stacks.
      *
      * @param DeferContext $context
-     * @param string|null $className
-     * @param string|null $methodName
+     * @param int $scopeType
      */
-    public static function consumeDefers(DeferContext $context): void
+    public static function consumeDefers(DeferContext $context, int $scopeType): void
     {
-        $context->consume();
+        $context->consume(
+            $scopeType
+        );
     }
 
     /**
