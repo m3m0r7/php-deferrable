@@ -1,10 +1,20 @@
 <?php declare(strict_types=1);
 
-namespace PHPDeferrable;
+namespace PHPDeferrable\Scopes;
+
+use PHPDeferrable\Contracts\DeferrableScopeInterface;
 
 abstract class AbstractDeferrableScope implements DeferrableScopeInterface
 {
     protected $targetClass;
+
+    /**
+     * @param string $targetClass
+     */
+    public function __construct(string $targetClass)
+    {
+        $this->targetClass = $targetClass;
+    }
 
     /**
      * @param string $targetClass
@@ -13,14 +23,6 @@ abstract class AbstractDeferrableScope implements DeferrableScopeInterface
     public static function factory(string $targetClass)
     {
         return new static($targetClass);
-    }
-
-    /**
-     * @param string $targetClass
-     */
-    public function __construct(string $targetClass)
-    {
-        $this->targetClass = $targetClass;
     }
 
     public function getClassName(): string

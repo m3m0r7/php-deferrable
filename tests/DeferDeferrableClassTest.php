@@ -2,10 +2,9 @@
 
 namespace PHPDeferrable\Test;
 
-use PHPDeferrable\DeferBailableExceptionInterface;
-use PHPDeferrable\DeferBailableScope;
-use PHPDeferrable\DeferContinuableScope;
-use PHPDeferrable\MergedDeferException;
+use PHPDeferrable\Contracts\DeferBailableExceptionInterface;
+use PHPDeferrable\Exceptions\MergedDeferException;
+use PHPDeferrable\Scopes\DeferBailableScope;
 use PHPUnit\Framework\TestCase;
 use function PHPDeferrable\defer;
 use function PHPDeferrable\deferrable;

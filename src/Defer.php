@@ -2,6 +2,7 @@
 
 namespace PHPDeferrable;
 
+use PHPDeferrable\Scopes\DeferrableScopeType;
 use SplStack;
 
 class Defer

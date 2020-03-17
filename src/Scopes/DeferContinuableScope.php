@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace PHPDeferrable;
+namespace PHPDeferrable\Scopes;
 
 class DeferContinuableScope extends AbstractDeferrableScope
 {

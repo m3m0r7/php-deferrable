@@ -2,10 +2,10 @@
 
 namespace PHPDeferrable\Test;
 
+use PHPDeferrable\Contracts\DeferBailableExceptionInterface;
 use PHPDeferrable\Defer;
-use PHPDeferrable\DeferBailableExceptionInterface;
-use PHPDeferrable\DeferrableScopeType;
-use PHPDeferrable\MergedDeferException;
+use PHPDeferrable\Exceptions\MergedDeferException;
+use PHPDeferrable\Scopes\DeferrableScopeType;
 use PHPUnit\Framework\TestCase;
 
 class TestingContextException extends \Exception

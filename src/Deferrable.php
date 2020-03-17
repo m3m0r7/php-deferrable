@@ -2,6 +2,13 @@
 
 namespace PHPDeferrable;
 
+use PHPDeferrable\Contracts\DeferrableInterface;
+use PHPDeferrable\Contracts\DeferrableScopeInterface;
+use PHPDeferrable\Exceptions\DeferrableException;
+use PHPDeferrable\Scopes\DeferContinuableScope;
+use PHPDeferrable\Scopes\DeferrableScopeType;
+use ReflectionMethod;
+
 class Deferrable
 {
     /**
@@ -77,7 +84,7 @@ class Deferrable
         $temporaryClassName = Runtime::DEFER_ANONYMOUS_CLASS_PREFIX . (static::$temporaryClassCounter++);
 
         eval(
-            'class ' . $temporaryClassName . ' extends ' . $scope->getClassName() . ' implements \\' . __NAMESPACE__ . '\\DeferrableInterface'
+            'class ' . $temporaryClassName . ' extends ' . $scope->getClassName() . ' implements \\' . __NAMESPACE__ . '\\Contracts\\DeferrableInterface'
             . '{'
             . implode($body)
             . '}'
@@ -87,10 +94,60 @@ class Deferrable
     }
 
     /**
-     * @param \ReflectionMethod $method
+     * @param callable $deferrableFunction
+     * @param mixed ...$arguments pass parameters into a function
+     * @return mixed
+     */
+    protected static function makeFunctionContextManipulator(callable $deferrableFunction, ...$arguments)
+    {
+        $context = static::createDeferContext(static::$scopeType);
+        try {
+            $result = $deferrableFunction(...$arguments);
+        } finally {
+            static::consume($context);
+        }
+        return $result;
+    }
+
+    /**
+     * @param int $scopeType
+     * @return DeferContext
+     */
+    public static function createDeferContext(int $scopeType): DeferContext
+    {
+        static::$scopeType = $scopeType;
+        return static::$currentContext = new DeferContext(static::$scopeType);
+    }
+
+    /**
+     * Consume deferred stacks.
+     *
+     * @param DeferContext $context
+     */
+    public static function consume(DeferContext $context): void
+    {
+        static::$scopeType = static::$defaultScopeType;
+
+        try {
+            $context->consume();
+        } finally {
+            static::removeContext();
+        }
+    }
+
+    /**
+     * Remove current context.
+     */
+    public static function removeContext()
+    {
+        static::$currentContext = null;
+    }
+
+    /**
+     * @param ReflectionMethod $method
      * @return string
      */
-    protected static function makeMethodSignature(\ReflectionMethod $method): string
+    protected static function makeMethodSignature(ReflectionMethod $method): string
     {
         $modifier = [];
         if ($method->isProtected()) {
@@ -146,64 +203,6 @@ class Deferrable
     }
 
     /**
-     * @param callable $deferrableFunction
-     * @param mixed ...$arguments pass parameters into a function
-     * @return mixed
-     */
-    protected static function makeFunctionContextManipulator(callable $deferrableFunction, ...$arguments)
-    {
-        $context = static::createDeferContext(static::$scopeType);
-        try {
-            $result = $deferrableFunction(...$arguments);
-        } finally {
-            static::consume($context);
-        }
-        return $result;
-    }
-
-    /**
-     * @param int $scopeType
-     * @return DeferContext
-     */
-    public static function createDeferContext(int $scopeType): DeferContext
-    {
-        static::$scopeType = $scopeType;
-        return static::$currentContext = new DeferContext(static::$scopeType);
-    }
-
-    /**
-     * @return DeferContext|null
-     */
-    public static function getCurrentContext(): ?DeferContext
-    {
-        return static::$currentContext ?? new DeferContext(static::$scopeType);
-    }
-
-    /**
-     * Consume deferred stacks.
-     *
-     * @param DeferContext $context
-     */
-    public static function consume(DeferContext $context): void
-    {
-        static::$scopeType = static::$defaultScopeType;
-
-        try {
-            $context->consume();
-        } finally {
-            static::removeContext();
-        }
-    }
-
-    /**
-     * Remove current context.
-     */
-    public static function removeContext()
-    {
-        static::$currentContext = null;
-    }
-
-    /**
      * Register a callback for deferring.
      *
      * @param callable $callback
@@ -219,5 +218,13 @@ class Deferrable
                 $callback,
                 ...$arguments
             );
+    }
+
+    /**
+     * @return DeferContext|null
+     */
+    public static function getCurrentContext(): ?DeferContext
+    {
+        return static::$currentContext ?? new DeferContext(static::$scopeType);
     }
 }

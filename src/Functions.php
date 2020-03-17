@@ -2,6 +2,9 @@
 
 namespace PHPDeferrable;
 
+use PHPDeferrable\Contracts\DeferrableInterface;
+use ReflectionException;
+
 if (!function_exists('deferrable')) {
     /**
      * Allows to defer the specified function or class
@@ -10,7 +13,7 @@ if (!function_exists('deferrable')) {
      * @param mixed ...$arguments pass parameters into class constructor
      *
      * @return DeferrableInterface|mixed
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     function deferrable($targetClass, ...$arguments)
     {

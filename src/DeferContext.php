@@ -2,7 +2,13 @@
 
 namespace PHPDeferrable;
 
+use Exception;
+use PHPDeferrable\Contracts\DeferBailableExceptionInterface;
+use PHPDeferrable\Exceptions\DeferrableException;
+use PHPDeferrable\Exceptions\MergedDeferException;
+use PHPDeferrable\Scopes\DeferrableScopeType;
 use SplStack;
+use Throwable;
 
 class DeferContext
 {
@@ -32,7 +38,7 @@ class DeferContext
     protected $everyAfterCallbacks = [];
 
     /**
-     * @var \Exception[] array
+     * @var Exception[] array
      */
     protected $exceptionStacks = [];
 
@@ -91,7 +97,7 @@ class DeferContext
 
                 try {
                     $callback();
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     if ($e instanceof DeferBailableExceptionInterface) {
                         $this->exceptionStacks = [];
                         throw $e;
