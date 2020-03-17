@@ -84,6 +84,10 @@ class DeferContext
                 case DeferrableScopeType::BAILABLE:
                     $callback();
                     break;
+                default:
+                    throw new DeferrableException(
+                        'Specified scope type is invalid'
+                    );
             }
             foreach ($this->everyAfterCallbacks as $everyCallback) {
                 $everyCallback($this);
