@@ -3,7 +3,20 @@
 namespace PHPDeferrable\Test;
 
 use PHPDeferrable\Defer;
+use PHPDeferrable\DeferBailableExceptionInterface;
+use PHPDeferrable\DeferrableScopeType;
+use PHPDeferrable\MergedDeferException;
 use PHPUnit\Framework\TestCase;
+
+class TestingContextException extends \Exception
+{
+
+}
+
+class BailableTestingContextException extends \Exception implements DeferBailableExceptionInterface
+{
+
+}
 
 class DeferCreateContextClassTestTestMyClass
 {
@@ -35,6 +48,45 @@ class DeferCreateContextClassTestTestMyClass
         $handle = fopen('php://memory', 'r');
         $context->defer(function () use ($handle) {
             fclose($handle);
+        });
+        return 'Return value';
+    }
+
+    public function doSomething4()
+    {
+        $context = Defer::createContext(DeferrableScopeType::BAILABLE);
+        $context->defer(function () {
+            throw new \Exception('exception 2');
+        });
+
+        $context->defer(function () {
+            throw new TestingContextException('exception 2');
+        });
+        return 'Return value';
+    }
+
+    public function doSomething5()
+    {
+        $context = Defer::createContext();
+        $context->defer(function () {
+            throw new \Exception('exception 2');
+        });
+
+        $context->defer(function () {
+            throw new TestingContextException('exception 2');
+        });
+        return 'Return value';
+    }
+
+    public function doSomething6()
+    {
+        $context = Defer::createContext();
+        $context->defer(function () {
+            throw new \Exception('exception 2');
+        });
+
+        $context->defer(function () {
+            throw new BailableTestingContextException('exception 2');
         });
         return 'Return value';
     }
@@ -91,5 +143,26 @@ class DeferCreateContextClassTest extends TestCase
             "Return value",
             $result
         );
+    }
+
+    public function testDeferPattern5()
+    {
+        $myClass = new DeferCreateContextClassTestTestMyClass();
+        $this->expectException(TestingContextException::class);
+        $myClass->doSomething4();
+    }
+
+    public function testDeferPattern6()
+    {
+        $myClass = new DeferCreateContextClassTestTestMyClass();
+        $this->expectException(MergedDeferException::class);
+        $myClass->doSomething5();
+    }
+
+    public function testDeferPattern7()
+    {
+        $myClass = new DeferCreateContextClassTestTestMyClass();
+        $this->expectException(BailableTestingContextException::class);
+        $myClass->doSomething6();
     }
 }
