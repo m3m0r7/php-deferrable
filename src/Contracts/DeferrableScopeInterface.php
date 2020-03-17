@@ -14,5 +14,7 @@ interface DeferrableScopeInterface
 
     public function isClass(): bool;
 
-    public function isFunction(): bool;
+    public function isCallable(): bool;
+
+    public function invokeCallable(...$arguments);
 }

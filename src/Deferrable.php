@@ -44,7 +44,10 @@ class Deferrable
     public static function makeContextManipulator($targetClass, ...$arguments)
     {
         if (is_callable($targetClass)) {
-            return static::makeFunctionContextManipulator($targetClass, ...$arguments);
+            return static::makeFunctionContextManipulator(
+                $targetClass,
+                ...$arguments
+            );
         }
 
         $scope = null;
@@ -57,6 +60,13 @@ class Deferrable
         } else {
             throw new DeferrableException(
                 'Passed parameter is invalid'
+            );
+        }
+
+        if ($scope->isCallable()) {
+            return static::makeFunctionContextManipulator(
+                $scope,
+                ...$arguments
             );
         }
 
@@ -94,15 +104,17 @@ class Deferrable
     }
 
     /**
-     * @param callable $deferrableFunction
+     * @param callable|DeferrableScopeInterface $deferrableFunction
      * @param mixed ...$arguments pass parameters into a function
      * @return mixed
      */
-    protected static function makeFunctionContextManipulator(callable $deferrableFunction, ...$arguments)
+    protected static function makeFunctionContextManipulator($deferrableFunction, ...$arguments)
     {
         $context = static::createDeferContext(static::$scopeType);
         try {
-            $result = $deferrableFunction(...$arguments);
+            $result = $deferrableFunction instanceof DeferrableScopeInterface
+                ? $deferrableFunction->invokeCallable(...$arguments)
+                : $deferrableFunction(...$arguments);
         } finally {
             static::consume($context);
         }

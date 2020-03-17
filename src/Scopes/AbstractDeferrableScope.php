@@ -3,6 +3,7 @@
 namespace PHPDeferrable\Scopes;
 
 use PHPDeferrable\Contracts\DeferrableScopeInterface;
+use PHPDeferrable\Exceptions\DeferrableException;
 
 abstract class AbstractDeferrableScope implements DeferrableScopeInterface
 {
@@ -16,7 +17,7 @@ abstract class AbstractDeferrableScope implements DeferrableScopeInterface
     protected function __construct($target, string $type)
     {
         $this->target = $target;
-        $this->type;
+        $this->type = $type;
     }
 
     /**
@@ -34,11 +35,14 @@ abstract class AbstractDeferrableScope implements DeferrableScopeInterface
      */
     public static function fromCallable(callable $targetCallable)
     {
-        return new static($targetCallable, 'function');
+        return new static($targetCallable, 'callable');
     }
 
     public function getClassName(): string
     {
+        if (!$this->isClass()) {
+            throw new DeferrableException('The scope is not a class.');
+        }
         return $this->target;
     }
 
@@ -49,8 +53,16 @@ abstract class AbstractDeferrableScope implements DeferrableScopeInterface
         return $this->type === 'class';
     }
 
-    public function isFunction(): bool
+    public function isCallable(): bool
     {
-        return $this->type === 'function';
+        return $this->type === 'callable';
+    }
+
+    public function invokeCallable(...$arguments)
+    {
+        if (!$this->isCallable()) {
+            throw new DeferrableException('The scope is not a callable.');
+        }
+        return ($this->target)(...$arguments);
     }
 }
