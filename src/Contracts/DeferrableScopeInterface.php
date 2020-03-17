@@ -4,11 +4,15 @@ namespace PHPDeferrable\Contracts;
 
 interface DeferrableScopeInterface
 {
-    public function __construct(string $targetClass);
+    public static function fromClassPath(string $targetClass);
 
-    public static function factory(string $targetClass);
+    public static function fromCallable(callable $targetCallable);
 
     public function getClassName(): string;
 
     public function getScopeType(): int;
+
+    public function isClass(): bool;
+
+    public function isFunction(): bool;
 }

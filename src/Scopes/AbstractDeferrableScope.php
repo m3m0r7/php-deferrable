@@ -6,29 +6,51 @@ use PHPDeferrable\Contracts\DeferrableScopeInterface;
 
 abstract class AbstractDeferrableScope implements DeferrableScopeInterface
 {
-    protected $targetClass;
+    protected $target;
+    protected $type;
 
     /**
-     * @param string $targetClass
+     * @param mixed $target
+     * @param string $type
      */
-    public function __construct(string $targetClass)
+    protected function __construct($target, string $type)
     {
-        $this->targetClass = $targetClass;
+        $this->target = $target;
+        $this->type;
     }
 
     /**
      * @param string $targetClass
      * @return static
      */
-    public static function factory(string $targetClass)
+    public static function fromClassPath(string $targetClass)
     {
-        return new static($targetClass);
+        return new static($targetClass, 'class');
+    }
+
+    /**
+     * @param callable $targetCallable
+     * @return static
+     */
+    public static function fromCallable(callable $targetCallable)
+    {
+        return new static($targetCallable, 'function');
     }
 
     public function getClassName(): string
     {
-        return $this->targetClass;
+        return $this->target;
     }
 
     abstract public function getScopeType(): int;
+
+    public function isClass(): bool
+    {
+        return $this->type === 'class';
+    }
+
+    public function isFunction(): bool
+    {
+        return $this->type === 'function';
+    }
 }

@@ -49,7 +49,7 @@ class Deferrable
 
         $scope = null;
         if (is_string($targetClass)) {
-            $scope = DeferContinuableScope::factory(
+            $scope = DeferContinuableScope::fromClassPath(
                 $targetClass
             );
         } else if ($targetClass instanceof DeferrableScopeInterface) {
