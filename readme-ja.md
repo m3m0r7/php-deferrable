@@ -270,6 +270,34 @@ deferrable(function() {
 
 上記の場合、`SecondException` が投げられます。
 
+`Defer::createContext` の場合、第一引数にスコープの種類を渡すことにより制御可能です。
+
+```php
+class Example 
+{
+    public function doSomething()
+    {
+        $context = Defer::createContext(DeferrableScopeType::BAILABLE);
+    
+        $context->defer(function () {
+            throw new ThirdException('exception 1');
+        });
+    
+        $context->defer(function () {
+            throw new SecondException('exception 2');
+        });
+    
+        $context->defer(function () {
+            throw new FirstException('exception 3');
+        });
+    }
+}
+
+(new Example())->doSomething();
+```
+
+上記の場合 `FirstException` が例外として投げられます。 
+
 ## コンテキストマニピュレータ
 コンテキストマニピュレータは非常にシンプルな方法で遅延処理を実現しています。
 この方法を使うことにより defer と deferrable との実行と比較して PHP における無駄なスタックやメモリ使用量を控えることが出来ます。

@@ -193,6 +193,110 @@ The cat has big power.
 ```
 
 
+## Exception of defer
+Normally, php-deferrable is designed so that even if an exception is thrown in the defer, the processing of the stacked defer continues.
+This is to resolve the inconsistency that Go has no exceptions, but PHP does.
+
+```php
+deferrable(function() {
+    defer(function () {
+        throw new Exception('exception 1');
+    });
+
+    defer(function () {
+        throw new Exception('exception 2');
+    });
+
+    defer(function () {
+        throw new Exception('exception 3');
+    });
+})()
+```
+
+In the case of the above example, all exceptions are combined and returned as `MergedDeferringException`.
+
+However, you may want to stop if an exception occurs. Of course, such means are also available.
+If an exception occurs, there are two ways to suspend defer processing.
+
+The first uses `DeferBailableScope :: of` to return the current deferrable scope itself if an exception occurs.
+
+```php
+deferrable(
+    DeferBailableScope::of(function() {
+        defer(function () {
+            throw new ThirdException('exception 1');
+        });
+    
+        defer(function () {
+            throw new SecondException('exception 2');
+        });
+    
+        defer(function () {
+            throw new FirstException('exception 3');
+        });
+    )
+})()
+```
+
+In this case, `FirstException` is thrown as an exception to the outer scope. The reason `FirstException` is thrown is
+The defer process pops the stack. In other words, the process is started from the last registered defer.
+Also, in contrast to `DeferBailableScope`, if you want to explicitly specify an exception that can be continued, use` DeferContinuableScope`.
+
+The second is to throw an exception that inherits from `DeferBailableExceptionInterface`.
+If you inherit from this interface, stop merging exceptions at that point and return only those inherited exceptions.
+
+```php
+
+class SecondException extends \Exception implements DeferBailableExceptionInterface
+{
+} 
+
+deferrable(function() {
+    defer(function () {
+        throw new ThirdException('exception 1');
+    });
+
+    defer(function () {
+        throw new SecondException('exception 2');
+    });
+
+    defer(function () {
+        throw new FirstException('exception 3');
+    });
+})()
+```
+
+In the above case, a `SecondException` is thrown.
+In the case of `Defer :: createContext`, it can be controlled by passing the scope type as the first argument.
+
+```php
+class Example 
+{
+    public function doSomething()
+    {
+        $context = Defer::createContext(DeferrableScopeType::BAILABLE);
+    
+        $context->defer(function () {
+            throw new ThirdException('exception 1');
+        });
+    
+        $context->defer(function () {
+            throw new SecondException('exception 2');
+        });
+    
+        $context->defer(function () {
+            throw new FirstException('exception 3');
+        });
+    }
+}
+
+(new Example())->doSomething();
+```
+
+
+In the above case, `FirstException` is thrown as an exception.
+
+
 ## Context Manipulator
 The context manipulator is very simple deferrable functions manipulator.
 You can take possible to decreasing memory usage with using it.
