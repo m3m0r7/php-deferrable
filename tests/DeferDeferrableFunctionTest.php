@@ -30,14 +30,14 @@ class DeferDeferrableFunctionTest extends TestCase
                 echo "0: deferred call\n";
             });
             echo "0: first call\n";
-        });
+        })();
 
         deferrable(function () {
             defer(function () {
                 echo "1: deferred call\n";
             });
             echo "1: first call\n";
-        });
+        })();
 
         $result = ob_get_clean();
 
@@ -55,7 +55,7 @@ class DeferDeferrableFunctionTest extends TestCase
                 echo "0: deferred call\n";
             });
             echo "0: first call\n";
-        });
+        })();
 
         $result = ob_get_clean();
 
@@ -73,7 +73,7 @@ class DeferDeferrableFunctionTest extends TestCase
                 echo "1: deferred call\n";
             });
             echo "1: first call\n";
-        });
+        })();
 
         $result = ob_get_clean();
 
@@ -94,7 +94,7 @@ class DeferDeferrableFunctionTest extends TestCase
                 echo "1: deferred call2\n";
             });
             echo "1: first call\n";
-        });
+        })();
 
         $result = ob_get_clean();
 
@@ -111,7 +111,7 @@ class DeferDeferrableFunctionTest extends TestCase
                 // do something
             });
             return 'Return value';
-        });
+        })();
 
         $this->assertSame(
             "Return value",
@@ -127,7 +127,7 @@ class DeferDeferrableFunctionTest extends TestCase
                 fclose($handle);
             });
             return 'Return value';
-        });
+        })();
 
         $this->assertSame(
             "Return value",
@@ -148,7 +148,7 @@ class DeferDeferrableFunctionTest extends TestCase
                     throw new DeferrableFunctionTestingException('exception 1');
                 });
             })
-        );
+        )();
     }
 
     public function testDeferPattern10()
@@ -162,7 +162,7 @@ class DeferDeferrableFunctionTest extends TestCase
             defer(function () {
                 throw new DeferrableFunctionTestingException('exception 1');
             });
-        });
+        })();
     }
 
     public function testDeferPattern9()
@@ -180,6 +180,6 @@ class DeferDeferrableFunctionTest extends TestCase
             defer(function () {
                 throw new DeferrableFunctionTestingException('exception 1');
             });
-        });
+        })();
     }
 }

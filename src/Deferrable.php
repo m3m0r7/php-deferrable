@@ -38,7 +38,7 @@ class Deferrable
      * @param callable|string|DeferrableScopeInterface $targetClass callable or class path
      * @param mixed ...$arguments pass parameters into class constructor
      *
-     * @return DeferrableInterface|mixed
+     * @return DeferrableInterface|callable
      * @throws \ReflectionException
      */
     public static function makeContextManipulator($targetClass, ...$arguments)
@@ -71,6 +71,7 @@ class Deferrable
         $reflection = new \ReflectionClass(
             $scope->getClassName()
         );
+
         $body = [];
 
         foreach ($reflection->getMethods() as $method) {
@@ -104,23 +105,25 @@ class Deferrable
     /**
      * @param callable|DeferrableScopeInterface $deferrableFunction
      * @param mixed ...$arguments pass parameters into a function
-     * @return mixed
+     * @return callable
      */
     protected static function makeFunctionContextManipulator($deferrableFunction, ...$arguments)
     {
-        $context = static::createDeferContext(
-            ($deferrableFunction instanceof DeferrableScopeInterface)
-                ? $deferrableFunction->getScopeType()
-                : static::$defaultScopeType
-        );
-        try {
-            $result = $deferrableFunction instanceof DeferrableScopeInterface
-                ? $deferrableFunction->invokeCallable(...$arguments)
-                : $deferrableFunction(...$arguments);
-        } finally {
-            static::consume($context);
-        }
-        return $result;
+        return function (array $options = []) use ($deferrableFunction, $arguments) {
+            $context = static::createDeferContext(
+                ($deferrableFunction instanceof DeferrableScopeInterface)
+                    ? $deferrableFunction->getScopeType()
+                    : static::$defaultScopeType
+            );
+            try {
+                $result = $deferrableFunction instanceof DeferrableScopeInterface
+                    ? $deferrableFunction->invokeCallable(...$arguments)
+                    : $deferrableFunction(...$arguments);
+            } finally {
+                static::consume($context);
+            }
+            return $result;
+        };
     }
 
     /**

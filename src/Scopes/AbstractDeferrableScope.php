@@ -40,17 +40,12 @@ abstract class AbstractDeferrableScope implements DeferrableScopeInterface
         return $this->target;
     }
 
-    abstract public function getScopeType(): int;
-
     public function isClass(): bool
     {
         return $this->type === 'class';
     }
 
-    public function isCallable(): bool
-    {
-        return $this->type === 'callable';
-    }
+    abstract public function getScopeType(): int;
 
     public function invokeCallable(...$arguments)
     {
@@ -58,5 +53,10 @@ abstract class AbstractDeferrableScope implements DeferrableScopeInterface
             throw new DeferrableException('The scope is not a callable.');
         }
         return ($this->target)(...$arguments);
+    }
+
+    public function isCallable(): bool
+    {
+        return $this->type === 'callable';
     }
 }

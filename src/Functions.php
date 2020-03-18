@@ -12,7 +12,7 @@ if (!function_exists('deferrable')) {
      * @param callable|string $targetClass callable or class path
      * @param mixed ...$arguments pass parameters into class constructor
      *
-     * @return DeferrableInterface|mixed
+     * @return DeferrableInterface|callable
      * @throws ReflectionException
      */
     function deferrable($targetClass, ...$arguments)
