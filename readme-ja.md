@@ -110,7 +110,7 @@ deferrable(function () {
 1: deferred call
 ```
 
-`deferrable` 関数は関数の実行結句を返り値として返すことも可能です。
+`deferrable` 関数は関数の実行結果を返り値として返すことも可能です。
 
 ```php
 use function PHPDeferrable\defer;
