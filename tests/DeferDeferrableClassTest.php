@@ -3,7 +3,7 @@
 namespace PHPDeferrable\Test;
 
 use PHPDeferrable\Contracts\DeferBailableExceptionInterface;
-use PHPDeferrable\Exceptions\MergedDeferException;
+use PHPDeferrable\Exceptions\MergedDeferringException;
 use PHPDeferrable\Scopes\DeferBailableScope;
 use PHPUnit\Framework\TestCase;
 use function PHPDeferrable\defer;
@@ -312,7 +312,7 @@ class DeferDeferrableClassTest extends TestCase
             DeferDeferrableClassTestTestMyClass::class
         );
 
-        $this->expectException(MergedDeferException::class);
+        $this->expectException(MergedDeferringException::class);
 
         $myClass->doSomething10();
     }

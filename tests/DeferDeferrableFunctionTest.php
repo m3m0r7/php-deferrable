@@ -3,7 +3,7 @@
 namespace PHPDeferrable\Test;
 
 use PHPDeferrable\Contracts\DeferBailableExceptionInterface;
-use PHPDeferrable\Exceptions\MergedDeferException;
+use PHPDeferrable\Exceptions\MergedDeferringException;
 use PHPDeferrable\Scopes\DeferBailableScope;
 use PHPUnit\Framework\TestCase;
 use function PHPDeferrable\defer;
@@ -153,7 +153,7 @@ class DeferDeferrableFunctionTest extends TestCase
 
     public function testDeferPattern10()
     {
-        $this->expectException(MergedDeferException::class);
+        $this->expectException(MergedDeferringException::class);
         $result = deferrable(function () {
             defer(function () {
                 throw new \Exception('exception 2');

@@ -4,7 +4,7 @@ namespace PHPDeferrable\Test;
 
 use PHPDeferrable\Contracts\DeferBailableExceptionInterface;
 use PHPDeferrable\Defer;
-use PHPDeferrable\Exceptions\MergedDeferException;
+use PHPDeferrable\Exceptions\MergedDeferringException;
 use PHPDeferrable\Scopes\DeferrableScopeType;
 use PHPUnit\Framework\TestCase;
 
@@ -155,7 +155,7 @@ class DeferCreateContextClassTest extends TestCase
     public function testDeferPattern6()
     {
         $myClass = new DeferCreateContextClassTestTestMyClass();
-        $this->expectException(MergedDeferException::class);
+        $this->expectException(MergedDeferringException::class);
         $myClass->doSomething5();
     }
 

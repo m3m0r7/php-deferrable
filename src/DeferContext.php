@@ -5,7 +5,7 @@ namespace PHPDeferrable;
 use Exception;
 use PHPDeferrable\Contracts\DeferBailableExceptionInterface;
 use PHPDeferrable\Exceptions\DeferrableException;
-use PHPDeferrable\Exceptions\MergedDeferException;
+use PHPDeferrable\Exceptions\MergedDeferringException;
 use PHPDeferrable\Scopes\DeferrableScopeType;
 use SplStack;
 use Throwable;
@@ -132,7 +132,7 @@ class DeferContext
                     $messages .= '[Exception ' . (++$number) . ']: ' . $exceptionStack->getMessage() . "\n" . $exceptionStack->getTraceAsString() . ' (line: ' . $exceptionStack->getLine() . ', file:' . $exceptionStack->getFile() . ')';
                 }
                 $this->exceptionStacks = [];
-                throw new MergedDeferException(
+                throw new MergedDeferringException(
                     $messages
                 );
             }
