@@ -98,7 +98,7 @@ deferrable(function () {
         echo "1: deferred call\n";
     });
     echo "1: first call\n";
-});
+})();
 ```
 
 下記のように表示されます。
@@ -121,7 +121,7 @@ $result = deferrable(function () {
         // do something.
     });
     return "Return value\n";
-});
+})();
 
 echo $result;
 ```
@@ -143,7 +143,7 @@ deferrable(function () {
         fclose($handle)
     });
     // ... do something
-});
+})();
 
 ```
 
@@ -160,7 +160,7 @@ deferrable(function () {
         echo $message;
     }, $message);
     // ... do something
-});
+})();
 
 ```
 
@@ -168,7 +168,6 @@ deferrable(function () {
 ```
 Hello World
 ```
-
 
 また、リファレンスとすることにより、 `defer` 内でパラメータの値を変更させることも可能です。
 
@@ -186,7 +185,7 @@ deferrable(function () {
         $message = 'The cat has big power.';
     }, $message);
     // ... do something
-});
+})();
 
 ```
 
@@ -195,6 +194,81 @@ deferrable(function () {
 The cat has big power.
 ```
 
+## defer の例外
+通常 php-deferrable は defer 内で例外が投げられてもスタックされた defer の処理は継続して行うように設計されています。
+これは Go には例外はなく、しかし PHP に例外があるという矛盾を解決するためです。
+
+```php
+deferrable(function() {
+    defer(function () {
+        throw new Exception('exception 1');
+    });
+
+    defer(function () {
+        throw new Exception('exception 2');
+    });
+
+    defer(function () {
+        throw new Exception('exception 3');
+    });
+})()
+```
+
+上記のような例の場合、例外はすべて結合され `MergedDeferringException` として返却します。
+
+しかし、例外が発生した場合止めたい場合もあるでしょう。そのような手段ももちろん用意してあります。
+例外が発生した場合、defer の処理を中断する方法は二通りあります。
+
+1 つ目は現在の deferrable スコープそのものを例外が発生した場合返すように `DeferBailableScope::of` を使用します。
+
+```php
+deferrable(
+    DeferBailableScope::of(function() {
+        defer(function () {
+            throw new ThirdException('exception 1');
+        });
+    
+        defer(function () {
+            throw new SecondException('exception 2');
+        });
+    
+        defer(function () {
+            throw new FirstException('exception 3');
+        });
+    )
+})()
+```
+
+この場合、 `FirstException` が例外として外のスコープに投げられます。`FirstException` が投げられる理由は、
+defer の処理はスタックをポップしていきます。つまり、一番最後に登録された defer から処理をすることになります。
+また、 `DeferBailableScope` とは反対に、継続できる例外を明示的に指定したい場合、 `DeferContinuableScope` を使用します。
+
+2 つ目は `DeferBailableExceptionInterface` を継承した例外を投げる方法です。
+このインタフェースを継承している場合、その時点で例外のマージを止めて、その継承された例外のみを返します。
+
+
+```php
+
+class SecondException extends \Exception implements DeferBailableExceptionInterface
+{
+} 
+
+deferrable(function() {
+    defer(function () {
+        throw new ThirdException('exception 1');
+    });
+
+    defer(function () {
+        throw new SecondException('exception 2');
+    });
+
+    defer(function () {
+        throw new FirstException('exception 3');
+    });
+})()
+```
+
+上記の場合、`SecondException` が投げられます。
 
 ## コンテキストマニピュレータ
 コンテキストマニピュレータは非常にシンプルな方法で遅延処理を実現しています。

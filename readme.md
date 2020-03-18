@@ -90,14 +90,14 @@ deferrable(function () {
         echo "0: deferred call\n";
     });
     echo "0: first call\n";
-});
+})();
 
 deferrable(function () {
     defer(function () {
         echo "1: deferred call\n";
     });
     echo "1: first call\n";
-});
+})();
 ```
 
 It will show as below:
@@ -120,7 +120,7 @@ $result = deferrable(function () {
         // do something.
     });
     return "Return value\n";
-});
+})();
 
 echo $result;
 ```
@@ -142,7 +142,7 @@ deferrable(function () {
         fclose($handle)
     });
     // ... do something
-});
+})();
 
 ```
 
@@ -158,7 +158,7 @@ deferrable(function () {
         echo $message;
     }, $message);
     // ... do something
-});
+})();
 
 ```
 
@@ -183,7 +183,7 @@ deferrable(function () {
         $message = 'The cat has big power.';
     }, $message);
     // ... do something
-});
+})();
 
 ```
 
