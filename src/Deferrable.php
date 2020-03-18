@@ -52,9 +52,7 @@ class Deferrable
 
         $scope = null;
         if (is_string($targetClass)) {
-            $scope = DeferContinuableScope::fromClassPath(
-                $targetClass
-            );
+            $scope = DeferContinuableScope::of($targetClass);
         } else if ($targetClass instanceof DeferrableScopeInterface) {
             $scope = $targetClass;
         } else {
@@ -110,7 +108,11 @@ class Deferrable
      */
     protected static function makeFunctionContextManipulator($deferrableFunction, ...$arguments)
     {
-        $context = static::createDeferContext(static::$scopeType);
+        $context = static::createDeferContext(
+            ($deferrableFunction instanceof DeferrableScopeInterface)
+                ? $deferrableFunction->getScopeType()
+                : static::$defaultScopeType
+        );
         try {
             $result = $deferrableFunction instanceof DeferrableScopeInterface
                 ? $deferrableFunction->invokeCallable(...$arguments)

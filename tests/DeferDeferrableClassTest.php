@@ -293,7 +293,7 @@ class DeferDeferrableClassTest extends TestCase
          * @var DeferDeferrableClassTestTestMyClass $myClass
          */
         $myClass = deferrable(
-            DeferBailableScope::fromClassPath(
+            DeferBailableScope::of(
                 DeferDeferrableClassTestTestMyClass::class
             )
         );

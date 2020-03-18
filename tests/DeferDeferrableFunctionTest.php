@@ -2,9 +2,23 @@
 
 namespace PHPDeferrable\Test;
 
+use PHPDeferrable\Contracts\DeferBailableExceptionInterface;
+use PHPDeferrable\Exceptions\MergedDeferException;
+use PHPDeferrable\Scopes\DeferBailableScope;
 use PHPUnit\Framework\TestCase;
 use function PHPDeferrable\defer;
 use function PHPDeferrable\deferrable;
+
+class DeferrableFunctionTestingException extends \Exception
+{
+
+}
+
+
+class BailableDeferrableFunctionTestingException extends \Exception implements DeferBailableExceptionInterface
+{
+
+}
 
 class DeferDeferrableFunctionTest extends TestCase
 {
@@ -119,5 +133,53 @@ class DeferDeferrableFunctionTest extends TestCase
             "Return value",
             $result
         );
+    }
+
+    public function testDeferPattern7()
+    {
+        $this->expectException(DeferrableFunctionTestingException::class);
+        $result = deferrable(
+            DeferBailableScope::of(function () {
+                defer(function () {
+                    throw new \Exception('exception 2');
+                });
+
+                defer(function () {
+                    throw new DeferrableFunctionTestingException('exception 1');
+                });
+            })
+        );
+    }
+
+    public function testDeferPattern10()
+    {
+        $this->expectException(MergedDeferException::class);
+        $result = deferrable(function () {
+            defer(function () {
+                throw new \Exception('exception 2');
+            });
+
+            defer(function () {
+                throw new DeferrableFunctionTestingException('exception 1');
+            });
+        });
+    }
+
+    public function testDeferPattern9()
+    {
+        $this->expectException(BailableDeferrableFunctionTestingException::class);
+        $result = deferrable(function () {
+            defer(function () {
+                throw new \Exception('exception 3');
+            });
+
+            defer(function () {
+                throw new BailableDeferrableFunctionTestingException('exception 2');
+            });
+
+            defer(function () {
+                throw new DeferrableFunctionTestingException('exception 1');
+            });
+        });
     }
 }

@@ -21,21 +21,15 @@ abstract class AbstractDeferrableScope implements DeferrableScopeInterface
     }
 
     /**
-     * @param string $targetClass
+     * @param callable|string $target
      * @return static
      */
-    public static function fromClassPath(string $targetClass)
+    public static function of($target)
     {
-        return new static($targetClass, 'class');
-    }
-
-    /**
-     * @param callable $targetCallable
-     * @return static
-     */
-    public static function fromCallable(callable $targetCallable)
-    {
-        return new static($targetCallable, 'callable');
+        if (is_string($target)) {
+            return new static($target, 'class');
+        }
+        return new static($target, 'callable');
     }
 
     public function getClassName(): string
