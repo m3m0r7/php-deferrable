@@ -4,6 +4,7 @@ namespace PHPDeferrable;
 
 use PHPDeferrable\Contracts\DeferrableInterface;
 use PHPDeferrable\Contracts\DeferrableScopeInterface;
+use PHPDeferrable\Exceptions\DeferException;
 use PHPDeferrable\Exceptions\DeferrableException;
 use PHPDeferrable\Scopes\DeferContinuableScope;
 use PHPDeferrable\Scopes\DeferrableScopeType;
@@ -227,6 +228,13 @@ class Deferrable
      */
     public static function defer(callable $callback, &...$arguments): void
     {
+        if (static::getCurrentContext() === null) {
+            throw new DeferException(
+                'Defer cannot stack because deferrable context is null. '
+                . 'Did you forget to run `Deferrable::createDeferContext`?'
+            );
+        }
+
         /**
          * @var string $currentStackName
          */
@@ -242,6 +250,6 @@ class Deferrable
      */
     public static function getCurrentContext(): ?DeferContext
     {
-        return static::$currentContext ?? new DeferContext(static::$scopeType);
+        return static::$currentContext ?? null;
     }
 }
