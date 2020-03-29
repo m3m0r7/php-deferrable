@@ -239,6 +239,37 @@ deferrable(
 })()
 ```
 
+クラスの場合は下記になります。
+
+```php
+
+class MyClassTest 
+{
+    public function doSomething()
+    {
+        defer(function () {
+            throw new ThirdException('exception 1');
+        });
+    
+        defer(function () {
+            throw new SecondException('exception 2');
+        });
+    
+        defer(function () {
+            throw new FirstException('exception 3');
+        });
+    }
+}
+
+$myClass = deferrable(
+    DeferBailableScope::of(
+        MyClassTest::class
+    )
+);
+
+$myClass->doSomething();
+```
+
 この場合、 `FirstException` が例外として外のスコープに投げられます。`FirstException` が投げられる理由は、
 defer の処理はスタックをポップしていきます。つまり、一番最後に登録された defer から処理をすることになります。
 また、 `DeferBailableScope` とは反対に、継続できる例外を明示的に指定したい場合、 `DeferContinuableScope` を使用します。

@@ -238,6 +238,37 @@ deferrable(
 })()
 ```
 
+or to use in class:
+
+```php
+
+class MyClassTest 
+{
+    public function doSomething()
+    {
+        defer(function () {
+            throw new ThirdException('exception 1');
+        });
+    
+        defer(function () {
+            throw new SecondException('exception 2');
+        });
+    
+        defer(function () {
+            throw new FirstException('exception 3');
+        });
+    }
+}
+
+$myClass = deferrable(
+    DeferBailableScope::of(
+        MyClassTest::class
+    )
+);
+
+$myClass->doSomething();
+```
+
 In this case, `FirstException` is thrown as an exception to the outer scope. The reason `FirstException` is thrown is
 The defer process pops the stack. In other words, the process is started from the last registered defer.
 Also, in contrast to `DeferBailableScope`, if you want to explicitly specify an exception that can be continued, use` DeferContinuableScope`.
